@@ -184,3 +184,23 @@ footer{padding-block:32px;color:var(--muted);font-size:.85rem}
 .day .s{overflow-wrap:anywhere;line-height:1.15}
 @media (max-width:480px){.day{padding:4px}.day .s{font-size:.55rem;letter-spacing:0}}
 @media (max-width:900px){.owner-grid > .card{order:2}}
+/* reviews */
+.review-card{max-width:620px;margin:32px auto}
+.field-label{font-size:.85rem;font-weight:600;padding:0;margin-bottom:4px}
+.stars{border:0;padding:0;margin:0 0 6px;display:inline-flex;flex-direction:row-reverse;justify-content:flex-end;gap:4px}
+.stars input{position:absolute;opacity:0;width:1px;height:1px}
+.stars label{font-size:2.4rem;line-height:1;color:var(--line);cursor:pointer;transition:color .15s}
+.stars input:checked ~ label,.stars label:hover,.stars label:hover ~ label{color:var(--amber)}
+.stars input:focus-visible + label{outline:3px solid var(--amber);outline-offset:2px}
+.reviews-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.reviews-avg{font:600 1rem var(--mono);color:var(--muted)}
+.reviews{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.reviews{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.reviews{grid-template-columns:1fr}}
+.rev{background:var(--panel);border:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.rev p{overflow-wrap:anywhere}
+.starline{color:var(--amber);letter-spacing:2px;font-size:1.1rem}
+.starline .dim{color:var(--line)}
+.rev .who{font:600 1rem var(--display);text-transform:uppercase;letter-spacing:.04em}
+.linkbox{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.linkbox input{flex:1 1 240px;min-width:0;border:1px solid var(--line);background:var(--concrete);padding:8px;font:500 .85rem var(--mono)}
