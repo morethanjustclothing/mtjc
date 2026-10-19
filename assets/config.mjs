@@ -12,7 +12,14 @@ export const CONFIG = {
   regularDays: [1, 2, 3, 4, 5],   // Mon–Fri (0 = Sunday)
   requestOnlyDays: [0, 6],        // Sat & Sun: can be requested, at the owner's discretion
   monthsAhead: 2,             // how far ahead people can request
-  minNoticeDays: 1            // earliest request is this many days from today
+  minNoticeDays: 1,           // earliest request is this many days from today
+
+  // Away periods: nobody can request these days (dates included, written YYYY-MM-DD).
+  // Booking reopens on its own the day after "to". Delete or change a line to adjust.
+  awayRanges: [
+    { from: "2026-10-24", to: "2026-11-24",
+      message: "I'm away from October 24 to November 24. Booking reopens for visits starting November 25." }
+  ]
 };
 
 export const pad = n => String(n).padStart(2, "0");
@@ -33,7 +40,10 @@ export const DURATIONS = (() => {
 })();
 
 export const isRequestOnly = k => CONFIG.requestOnlyDays.includes(fromKey(k).getDay());
+export const awayFor = k => (CONFIG.awayRanges || []).find(r => k >= r.from && k <= r.to) || null;
+export const upcomingAway = todayKey => (CONFIG.awayRanges || []).filter(r => r.to >= todayKey);
 export const isOpenDay = k => {
+  if (awayFor(k)) return false;
   const dow = fromKey(k).getDay();
   return CONFIG.regularDays.includes(dow) || CONFIG.requestOnlyDays.includes(dow);
 };
