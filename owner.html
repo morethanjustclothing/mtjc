@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Owner | More Than Just Clothing</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231d2328'/%3E%3Ctext x='16' y='23' font-family='Impact,Arial' font-size='18' text-anchor='middle' fill='%23c9781a'%3EMT%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+<div class="viewbar">
+  <div class="wrap vb-in">
+    <span class="vb-label">Owner</span>
+    <div class="vb-seg" role="group" aria-label="Choose a view">
+      <span class="vb-on" aria-current="page">Owner view</span>
+      <a href="/" class="vb-link">Visitor view</a>
+    </div>
+    <span class="vb-note" id="vbNote">Private. Customers never see this page.</span>
+    <button type="button" class="btn2 small" id="signOut" hidden style="margin-left:auto;border-color:currentColor;color:inherit">Sign out</button>
+  </div>
+</div>
+
+<header class="wrap top">
+  <div class="brand">More Than Just Clothing</div>
+  <span class="eyebrow">Appointments</span>
+</header>
+
+<main>
+  <section id="loginView" hidden style="border:0"><div class="wrap">
+    <div class="card login">
+      <h2 style="font-size:2rem">Owner sign in</h2>
+      <p class="muted" style="margin:6px 0 16px">Enter the owner password you set in Netlify.</p>
+      <form id="loginForm" novalidate>
+        <label for="f-pass" class="sr">Password</label>
+        <input id="f-pass" type="password" autocomplete="current-password" placeholder="Password">
+        <label class="check"><input type="checkbox" id="f-remember" checked> Keep me signed in on this device</label>
+        <button class="cta" type="submit" id="loginBtn">Sign in</button>
+        <p class="err" id="loginErr" role="alert"></p>
+      </form>
+    </div>
+  </div></section>
+
+  <section id="dash" hidden><div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Only you can see this</span>
+      <h2>Incoming requests</h2>
+      <p class="lede">Approve a request to lock in that time, or decline it with a note suggesting another day. Customers see your decision and note when they check their request code. Use the text and email buttons to reach them directly.</p>
+    </div>
+    <div class="owner-grid">
+      <div class="card">
+        <div class="cal-head">
+          <button class="iconbtn" id="prev" aria-label="Previous month">‹</button>
+          <h3 id="monthLabel">Month</h3>
+          <button class="iconbtn" id="next" aria-label="Next month">›</button>
+        </div>
+        <div class="grid" id="dows"></div>
+        <div class="grid" id="days" style="margin-top:4px"></div>
+        <p class="muted" style="margin-top:12px">Tap a day to close it (nobody can request it) or reopen it. Days show how many approved visits they have.</p>
+      </div>
+      <div>
+        <div class="counts" id="counts"></div>
+        <div class="tabs" id="tabs">
+          <button data-f="pending" aria-pressed="true">Pending</button>
+          <button data-f="approved" aria-pressed="false">Approved</button>
+          <button data-f="declined" aria-pressed="false">Declined</button>
+          <button data-f="past" aria-pressed="false">Past</button>
+        </div>
+        <div class="reqs" id="list"><p class="muted">Loading requests…</p></div>
+        <p class="muted" id="updated" style="margin-top:12px"></p>
+      </div>
+    </div>
+  </div></section>
+</main>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script type="module" src="/assets/owner.mjs"></script>
+</body>
+</html>

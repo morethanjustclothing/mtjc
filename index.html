@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>More Than Just Clothing | Vintage by Appointment</title>
+<meta name="description" content="Private, appointment-only vintage clothing warehouse in East Greenville, PA. See availability and request a visit.">
+<meta property="og:title" content="More Than Just Clothing">
+<meta property="og:description" content="Private, appointment-only vintage clothing warehouse in East Greenville, PA.">
+<meta property="og:image" content="/img/banner.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23c9781a'/%3E%3Ctext x='16' y='23' font-family='Impact,Arial' font-size='18' text-anchor='middle' fill='white'%3EMT%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+<div class="viewbar" id="ownerBar" hidden>
+  <div class="wrap vb-in">
+    <span class="vb-label">Owner</span>
+    <div class="vb-seg" role="group" aria-label="Choose a view">
+      <a href="/owner" class="vb-link">Owner view</a>
+      <span class="vb-on" aria-current="page">Visitor view</span>
+    </div>
+    <span class="vb-note">You're seeing the site exactly as customers do. Only you can see this bar.</span>
+  </div>
+</div>
+<header class="wrap top">
+  <div class="brand" id="brand">More Than Just Clothing</div>
+  <nav class="nav">
+    <a href="#book">Request a visit</a><a href="#expect">What to expect</a><a href="#inside">Inside</a><a href="#find">Location</a>
+  </nav>
+</header>
+
+<div class="banner">
+  <img class="banner-img" src="img/banner.jpg" alt="Long racks of vintage jackets and denim under the warehouse's white brick walls" fetchpriority="high">
+  <div class="shade"></div>
+  <div class="text wrap">
+    <span class="eyebrow">By appointment only</span>
+    <h1 id="heroName">More Than Just Clothing</h1>
+    <p>A private space, open one visit at a time. Find yourself fully immersed, with special pieces everywhere you look. Shop a wide and far selection of the most superior brands and quality fabrics. Check the calendar and find a time that best suits you.</p>
+    <a class="cta" href="#book">See availability</a>
+  </div>
+</div>
+
+<main>
+<section id="book"><div class="wrap">
+  <div class="head">
+    <span class="eyebrow">Availability</span>
+    <h2>Request an appointment</h2>
+    <p class="lede">Pick an open day, choose a time, and send in the request. Once the request is confirmed, you will hear back with confirmation for date and time by your preferred contact method.</p>
+  </div>
+  <div class="book">
+    <div class="card">
+      <div class="cal-head">
+        <button class="iconbtn" id="prev" aria-label="Previous month">‹</button>
+        <h3 id="monthLabel">Month</h3>
+        <button class="iconbtn" id="next" aria-label="Next month">›</button>
+      </div>
+      <div class="grid" id="dows"></div>
+      <div class="grid" id="days" style="margin-top:4px"></div>
+      <div class="legend">
+        <span><i style="background:var(--ok)"></i>Open</span>
+        <span><i style="background:var(--warn)"></i>Few times left</span>
+        <span><i style="border:1px dashed var(--steel)"></i>Weekend, by request</span>
+        <span><i style="background:var(--line)"></i>Closed or full</span>
+      </div>
+      <p class="muted" id="hoursText" style="margin-top:10px"></p>
+    </div>
+
+    <div class="card" id="formCard">
+      <p class="muted" id="pickPrompt">Choose a day on the calendar to see open times.</p>
+      <div id="pickArea" hidden>
+        <div class="pick" id="pickDate"></div>
+        <p class="notice wknote" id="wkNote" hidden>Weekends are normally unavailable. You can still send a request, and I'll let you know if I can make it work.</p>
+        <div class="field dur"><label for="f-dur">How long is your appointment?</label>
+          <select id="f-dur"></select></div>
+        <label class="muted" style="display:block;margin-top:4px">Start time</label>
+        <div class="slots" id="slots" role="group" aria-label="Available start times"></div>
+        <form id="reqForm" novalidate>
+          <p class="hp" aria-hidden="true"><label>Leave this empty <input id="f-website" tabindex="-1" autocomplete="off"></label></p>
+          <div class="field"><label for="f-name">Your name <span class="reqmark">*</span></label><input id="f-name" required autocomplete="name"></div>
+          <div class="row2">
+            <div class="field"><label for="f-phone">Phone <span class="reqmark">*</span></label><input id="f-phone" type="tel" autocomplete="tel" required aria-required="true"></div>
+            <div class="field"><label for="f-email">Email <span class="reqmark">*</span></label><input id="f-email" type="email" autocomplete="email" required aria-required="true"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="f-contact">Best way to reach you</label>
+              <select id="f-contact"><option>Text</option><option>Call</option><option>Email</option></select></div>
+            <div class="field"><label for="f-size">People coming</label>
+              <select id="f-size"><option>1</option><option>2</option><option>3</option><option>4+</option></select></div>
+          </div>
+          <div class="field"><label for="f-notes">Anything I should know?</label><textarea id="f-notes" rows="3"></textarea></div>
+          <button class="cta" type="submit" id="sendBtn">Send request</button>
+          <p class="muted" id="formErr" role="alert" style="color:var(--bad);margin-top:8px"></p>
+        </form>
+      </div>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <div class="status-box card" id="status">
+    <div>
+      <h3>Check your request</h3>
+      <p class="muted" style="margin-top:6px">Enter the code you got after sending your request to see if it's been confirmed.</p>
+    </div>
+    <div>
+      <form class="code-row" id="codeForm" novalidate>
+        <label for="f-code" class="sr">Request code</label>
+        <input id="f-code" placeholder="ABCD-1234" autocomplete="off" maxlength="9" spellcheck="false">
+        <button class="btn2" type="submit">Check status</button>
+      </form>
+      <div id="statusOut" class="reqs" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+</div></section>
+
+
+
+<section id="expect"><div class="wrap">
+  <div class="head"><span class="eyebrow">How it works</span><h2>What to expect</h2></div>
+  <ol class="steps">
+    <li><h3>Send a request</h3><p class="muted">Pick a day and time from the calendar and tell me a little about your visit.</p></li>
+    <li><h3>I confirm</h3><p class="muted">I check it against my schedule and approve it, or suggest a better time.</p></li>
+    <li><h3>Get arrival details</h3><p class="muted">Once confirmed, I'll send the address, parking and entry instructions.</p></li>
+    <li><h3>Your visit</h3><p class="muted">Arrive at your time. The space is reserved just for you during your appointment.</p></li>
+  </ol>
+</div></section>
+
+<section id="inside"><div class="wrap">
+  <div class="head"><span class="eyebrow">Inside</span><h2>Take a look around</h2><p class="lede">Rack after rack of vintage denim, leather, outerwear and shirting. Tap any photo to see it larger.</p></div>
+  <div class="gallery" id="gallery"></div>
+</div></section>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+  <div class="ctl"><button type="button" id="lbPrev">‹ Prev</button><button type="button" id="lbClose">Close</button><button type="button" id="lbNext">Next ›</button></div>
+</div>
+
+
+<section id="find"><div class="wrap">
+  <div class="head">
+    <span class="eyebrow">Location</span>
+    <h2>Find us in East Greenville</h2>
+    <p class="lede">We're in East Greenville, Pennsylvania, in the Upper Perkiomen Valley. The exact address is sent with your confirmed appointment.</p>
+  </div>
+  <div class="mapbox" id="mapBox">
+    <div class="map-fallback" id="mapFallback">
+      <svg viewBox="0 0 600 300" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+        <rect width="600" height="300" fill="var(--panel)"/>
+        <g stroke="var(--line)" stroke-width="2" fill="none">
+          <path d="M-10 210 C120 190 220 230 330 170 S520 120 610 140"/>
+          <path d="M80 -10 C110 80 170 150 230 310"/>
+          <path d="M380 -10 C360 90 400 200 470 310"/>
+          <path d="M-10 90 C150 110 260 80 610 70"/>
+        </g>
+        <path d="M-10 250 C140 235 250 270 360 230 S540 200 610 215" stroke="var(--steel)" stroke-opacity=".35" stroke-width="10" fill="none"/>
+        <g transform="translate(300 150)">
+          <circle r="34" fill="var(--amber)" fill-opacity=".18"/>
+          <path d="M0 8 C-14 -6 -16 -12 -16 -18 A16 16 0 1 1 16 -18 C16 -12 14 -6 0 8Z" fill="var(--amber)"/>
+          <circle cy="-18" r="6" fill="var(--panel)"/>
+        </g>
+      </svg>
+      <div class="map-card">
+        <strong>East Greenville, PA 18041</strong>
+        <span class="muted">Montgomery County · about an hour northwest of Philadelphia</span>
+        <a class="cta" href="https://www.google.com/maps/place/East+Greenville,+PA+18041" target="_blank" rel="noopener">Open in Google Maps</a>
+      </div>
+    </div>
+  </div>
+</div></section>
+</main>
+
+<footer class="wrap" id="foot"></footer>
+
+<!-- Netlify uses this hidden form to email you each new request (Forms > notifications). -->
+<form name="appointment-request" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input name="bot-field"><input name="code"><input name="date"><input name="time"><input name="length">
+  <input name="name"><input name="phone"><input name="email"><input name="contact"><input name="people"><textarea name="notes"></textarea>
+</form>
+
+<script type="module" src="/assets/app.mjs"></script>
+</body>
+</html>
