@@ -10,6 +10,13 @@
 //          POST /api/owner/decide   {code, status, note}
 //          POST /api/owner/block    {date, closed}
 //          POST /api/owner/delete   {code}
+// Reviews: GET  /api/reviews                 -> published reviews (public)
+//          GET  /api/review-check?code=X     -> is this review link valid?
+//          POST /api/review                  -> submit a review with a private link code
+//          GET  /api/owner/reviews           -> every review (owner)
+//          POST /api/owner/review   {code, status}  published | hidden | pending
+//          POST /api/owner/review-delete {code}
+//          POST /api/owner/invite   {label}  -> new one-time review link for a walk-in shopper
 
 import { getStore } from "@netlify/blobs";
 import { createHash, timingSafeEqual, randomInt } from "node:crypto";
@@ -53,6 +60,22 @@ async function allRequests(s) {
   const items = await Promise.all(blobs.map(b => s.get(b.key, { type: "json" })));
   return items.filter(Boolean);
 }
+async function listJSON(s, prefix) {
+  const { blobs } = await s.list({ prefix });
+  return (await Promise.all(blobs.map(b => s.get(b.key, { type: "json" })))).filter(Boolean);
+}
+// A review link is valid if it belongs to an approved visit or an unused invite, and has no review yet.
+async function reviewLink(s, code) {
+  if (code.length !== 8) return { error: "This review link isn't complete. Please use the full link you were sent." };
+  if (await s.get(`reviews/${code}`)) return { error: "A review was already sent with this link. Thank you!", used: true };
+  const r = await s.get(`requests/${code}`, { type: "json" });
+  if (r && r.status === "approved") return { name: r.name.split(" ")[0], date: r.date, source: "visit" };
+  const inv = await s.get(`invites/${code}`, { type: "json" });
+  if (inv) return { name: "", date: "", source: "invite" };
+  return { error: "This review link isn't valid. Ask for a new one." };
+}
+const publicReview = r => ({ name: r.name, rating: r.rating, text: r.text, createdAt: r.createdAt });
+
 async function getBlocked(s) {
   return (await s.get("settings/blocked", { type: "json" })) || {};
 }
@@ -140,6 +163,38 @@ export default async (req, context) => {
       return json({ ok: true, code });
     }
 
+    if (path === "reviews" && method === "GET") {
+      const list = (await listJSON(s, "reviews/")).filter(r => r.status === "published")
+        .sort((a, b) => b.createdAt - a.createdAt).map(publicReview);
+      const avg = list.length ? list.reduce((t, r) => t + r.rating, 0) / list.length : 0;
+      return json({ reviews: list, count: list.length, average: Math.round(avg * 10) / 10 });
+    }
+
+    if (path === "review-check" && method === "GET") {
+      const link = await reviewLink(s, cleanCode(url.searchParams.get("code")));
+      return link.error ? fail(link.used ? 409 : 404, link.error) : json({ ok: true, ...link });
+    }
+
+    if (path === "review" && method === "POST") {
+      const b = await readBody(req);
+      if (!b) return fail(400, "Something went wrong with the form. Please try again.");
+      if (b.website) return json({ ok: true });
+      const code = cleanCode(b.code);
+      const link = await reviewLink(s, code);
+      if (link.error) return fail(link.used ? 409 : 404, link.error);
+      const rating = Number(b.rating);
+      if (![1, 2, 3, 4, 5].includes(rating)) return fail(400, "Tap the stars to choose a rating.");
+      const name = clip(b.name, 40);
+      const text = clip(b.text, 1000);
+      if (!name) return fail(400, "Add your first name.");
+      if (text.length < 5) return fail(400, "Write a few words about your visit.");
+      if (await rateLimited(s, context?.ip)) return fail(429, "Too many tries from this connection. Please try again in an hour.");
+      const now = Date.now();
+      await s.setJSON(`reviews/${code}`, { code, rating, name, text, source: link.source, visitDate: link.date, status: "pending", createdAt: now, updatedAt: now });
+      if (link.source === "invite") await s.delete(`invites/${code}`);
+      return json({ ok: true });
+    }
+
     if (path === "status" && method === "GET") {
       const code = cleanCode(url.searchParams.get("code"));
       if (code.length !== 8) return fail(400, "Enter the 8-character code from your request.");
@@ -194,6 +249,42 @@ export default async (req, context) => {
         for (const k in blocked) if (k < cutoff) delete blocked[k];
         await s.setJSON("settings/blocked", blocked);
         return json({ ok: true, blocked });
+      }
+
+      if (action === "reviews" && method === "GET") {
+        const [reviews, invites] = await Promise.all([listJSON(s, "reviews/"), listJSON(s, "invites/")]);
+        return json({ reviews, invites });
+      }
+
+      if (action === "review" && method === "POST") {
+        const b = await readBody(req);
+        const code = cleanCode(b?.code);
+        if (!["published", "hidden", "pending"].includes(b?.status)) return fail(400, "Unknown status.");
+        const r = await s.get(`reviews/${code}`, { type: "json" });
+        if (!r) return fail(404, "That review no longer exists.");
+        const updated = { ...r, status: b.status, updatedAt: Date.now() };
+        await s.setJSON(`reviews/${code}`, updated);
+        return json({ ok: true, review: updated });
+      }
+
+      if (action === "review-delete" && method === "POST") {
+        const b = await readBody(req);
+        await s.delete(`reviews/${cleanCode(b?.code)}`);
+        return json({ ok: true });
+      }
+
+      if (action === "invite" && method === "POST") {
+        const b = await readBody(req);
+        let code = newCode();
+        while (await s.get(`requests/${code}`) || await s.get(`invites/${code}`)) code = newCode();
+        await s.setJSON(`invites/${code}`, { code, label: clip(b?.label, 60), createdAt: Date.now() });
+        return json({ ok: true, code });
+      }
+
+      if (action === "invite-delete" && method === "POST") {
+        const b = await readBody(req);
+        await s.delete(`invites/${cleanCode(b?.code)}`);
+        return json({ ok: true });
       }
 
       if (action === "delete" && method === "POST") {
