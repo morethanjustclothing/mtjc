@@ -269,7 +269,36 @@ const PHOTOS = [
   });
 })();
 
+/* ---------- reviews (only ones the owner published) ---------- */
+function starLine(n) {
+  const s = document.createElement("span"); s.className = "starline"; s.setAttribute("aria-label", `${n} out of 5 stars`);
+  s.innerHTML = "★".repeat(n) + `<span class="dim">${"★".repeat(5 - n)}</span>`;
+  return s;
+}
+async function loadReviews() {
+  try {
+    const r = await fetch("/api/reviews", { cache: "no-store" });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d.count) return;
+    $("reviewsAvg").textContent = `${d.average.toFixed(1)} ★ · ${d.count} review${d.count > 1 ? "s" : ""}`;
+    $("reviewsList").replaceChildren(...d.reviews.map(v => {
+      const c = document.createElement("article"); c.className = "rev";
+      const t = document.createElement("p"); t.textContent = v.text;
+      const who = document.createElement("div");
+      const n = document.createElement("div"); n.className = "who"; n.textContent = v.name;
+      const when = document.createElement("div"); when.className = "muted";
+      when.textContent = new Date(v.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      who.append(n, when);
+      c.append(starLine(v.rating), t, who);
+      return c;
+    }));
+    $("reviews").hidden = false; $("navReviews").hidden = false;
+  } catch {}
+}
+
 /* ---------- start ---------- */
+loadReviews();
 cal.render();
 loadAvailability();
 showStatuses();
