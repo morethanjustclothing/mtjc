@@ -1,4 +1,4 @@
-import { CONFIG, ALL_SLOTS, keyOf, fromKey, fmtDate, isOpenDay, isRequestOnly, fits } from "./config.mjs";
+import { CONFIG, ALL_SLOTS, keyOf, fromKey, fmtDate, isOpenDay, isRequestOnly, fits, awayFor } from "./config.mjs";
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export const today = () => { const t = new Date(); t.setHours(0, 0, 0, 0); return t; };
@@ -37,6 +37,7 @@ export function makeCalendar({ els, mode, getAvail, getSelected, onPick, countFo
       let label;
       if (mode === "owner") {
         if (!inRange) { b.classList.add("off"); b.disabled = true; label = "unavailable"; }
+        else if (awayFor(k)) { b.classList.add("closed"); b.disabled = true; s.textContent = "Away"; label = "away"; }
         else if (closed) { b.classList.add("closed"); s.textContent = "Closed"; label = "closed, tap to reopen"; }
         else {
           const c = countFor ? countFor(k) : 0;
@@ -45,12 +46,13 @@ export function makeCalendar({ els, mode, getAvail, getSelected, onPick, countFo
           else s.textContent = "Open";
           label = "open, tap to close";
         }
-        if (inRange) b.onclick = () => onPick(k);
+        if (inRange && !b.disabled) b.onclick = () => onPick(k);
       } else {
         const free = inRange && isOpenDay(k) ? freeStarts(k, avail) : 0;
         if (!inRange || free === 0) {
           b.classList.add("off"); b.disabled = true;
-          if (inRange && closed) s.textContent = "Closed";
+          if (inRange && awayFor(k)) s.textContent = "Away";
+          else if (inRange && closed) s.textContent = "Closed";
           else if (inRange && isOpenDay(k)) s.textContent = "Full";
           label = "unavailable";
         } else {
