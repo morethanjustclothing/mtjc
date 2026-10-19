@@ -1,5 +1,5 @@
 import {
-  CONFIG, ALL_SLOTS, DURATIONS, fits, isRequestOnly,
+  CONFIG, ALL_SLOTS, DURATIONS, fits, isRequestOnly, upcomingAway, keyOf,
   fmtTime, fmtDur, fmtRange, fmtDate, fmtCode
 } from "./config.mjs";
 import { makeCalendar } from "./calendar.mjs";
@@ -19,6 +19,15 @@ $("hoursText").textContent = `Hours: Mon–Fri, ${fmtTime(CONFIG.openFrom)} – 
 const durLabel = d => { const h = Math.floor(d / 60), m = d % 60; return [h ? `${h} hour${h > 1 ? "s" : ""}` : "", m ? `${m} minutes` : ""].filter(Boolean).join(" "); };
 $("f-dur").replaceChildren(...DURATIONS.map(d => { const o = document.createElement("option"); o.value = d; o.textContent = durLabel(d); return o; }));
 try { if (localStorage.getItem("mtjc-owner")) $("ownerBar").hidden = false; } catch {}
+
+/* ---------- away notice ---------- */
+(function awayNotice() {
+  const away = upcomingAway(keyOf(new Date()));
+  if (!away.length) return;
+  const n = document.createElement("p"); n.className = "notice"; n.style.marginBottom = "20px";
+  n.textContent = away.map(r => r.message).join(" ");
+  document.querySelector("#book .book").before(n);
+})();
 
 /* ---------- calendar ---------- */
 const cal = makeCalendar({
