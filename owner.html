@@ -74,6 +74,31 @@
       </div>
     </div>
   </div></section>
+
+  <section id="revDash" hidden><div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Only you can see this</span>
+      <h2>Reviews</h2>
+      <p class="lede">Shoppers can only leave a review with a private link from you, and nothing shows on the website until you publish it. Send the link from an approved visit above, or create one below for a walk-in shopper.</p>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <h3>Create a review link</h3>
+      <p class="muted" style="margin:6px 0 10px">For someone who shopped without booking online. Each link works once.</p>
+      <form class="code-row" id="inviteForm" novalidate>
+        <label for="f-label" class="sr">Who is it for? (optional)</label>
+        <input id="f-label" placeholder="Who is it for? (optional, only you see this)" maxlength="60" style="text-transform:none;letter-spacing:0;font-family:var(--body)">
+        <button class="cta" type="submit">Create link</button>
+      </form>
+      <div id="inviteOut"></div>
+    </div>
+    <div class="tabs" id="revTabs">
+      <button data-f="pending" aria-pressed="true">Waiting for you</button>
+      <button data-f="published" aria-pressed="false">Published</button>
+      <button data-f="hidden" aria-pressed="false">Hidden</button>
+      <button data-f="links" aria-pressed="false">Unused links</button>
+    </div>
+    <div class="reqs" id="revList"><p class="muted">Loading reviews…</p></div>
+  </div></section>
 </main>
 <div class="toast" id="toast" hidden role="status"></div>
 
