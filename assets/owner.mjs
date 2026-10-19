@@ -9,7 +9,8 @@ const local = {
   clear() { try { localStorage.removeItem(KEY); sessionStorage.removeItem(KEY); } catch {} }
 };
 
-const state = { key: local.get(), requests: [], blocked: {}, taken: {}, filter: "pending", busy: false };
+const state = { key: local.get(), requests: [], blocked: {}, taken: {}, filter: "pending", busy: false, reviews: [], invites: [], revFilter: "pending" };
+const reviewUrl = code => `${location.origin}/review?code=${fmtCode(code)}`;
 
 async function api(path, body) {
   const r = await fetch("/api/owner/" + path, {
@@ -30,7 +31,7 @@ function toast(msg) {
 
 /* ---------- sign in ---------- */
 function showLogin(msg) {
-  $("loginView").hidden = false; $("dash").hidden = true; $("signOut").hidden = true;
+  $("loginView").hidden = false; $("dash").hidden = true; $("revDash").hidden = true; $("signOut").hidden = true;
   $("loginErr").textContent = msg || ""; $("f-pass").focus();
 }
 function signOut(msg) { local.clear(); state.key = null; showLogin(msg); }
@@ -154,6 +155,13 @@ function card(r) {
       try { await navigator.clipboard.writeText(msg); toast("Message copied."); } catch { toast(msg); }
     })
   );
+  if (r.status === "approved") {
+    const rmsg = `Hi ${r.name.split(" ")[0]}, thanks for visiting ${CONFIG.name}! If you have a minute, I'd love a review: ${reviewUrl(r.code)}`;
+    reach.append(
+      link("Text review link", `sms:${digits}?&body=${encodeURIComponent(rmsg)}`),
+      btn("Copy review link", async () => { try { await navigator.clipboard.writeText(rmsg); toast("Review message copied."); } catch { toast(reviewUrl(r.code)); } })
+    );
+  }
   const del = btn("Delete", () => {
     if (del.dataset.confirm) return remove(r);
     del.dataset.confirm = "1"; del.textContent = "Tap again to delete"; del.classList.add("err");
@@ -185,12 +193,104 @@ async function remove(r) {
 /* ---------- start ---------- */
 let timer;
 function start() {
-  $("loginView").hidden = true; $("dash").hidden = false; $("signOut").hidden = false;
-  load(); clearInterval(timer);
-  timer = setInterval(() => { if (!document.hidden && state.key) load(); }, 30000);
+  $("loginView").hidden = true; $("dash").hidden = false; $("revDash").hidden = false; $("signOut").hidden = false;
+  load(); loadReviews(); clearInterval(timer);
+  timer = setInterval(() => { if (!document.hidden && state.key) { load(); loadReviews(); } }, 30000);
 }
 if (state.key) {
   fetch("/api/owner/check", { headers: { "x-owner-key": state.key }, cache: "no-store" })
     .then(r => r.ok ? start() : r.status === 401 ? signOut("Please sign in again.") : r.json().then(d => showLogin(d.error)))
     .catch(() => showLogin("Couldn't reach the site. Check your connection."));
 } else showLogin();
+
+/* ---------- reviews ---------- */
+async function loadReviews() {
+  try {
+    const d = await api("reviews");
+    state.reviews = d.reviews; state.invites = d.invites;
+    renderReviews();
+  } catch (e) { if (e.status) $("revList").textContent = e.message; }
+}
+document.querySelectorAll("#revTabs button").forEach(b => b.onclick = () => {
+  state.revFilter = b.dataset.f;
+  document.querySelectorAll("#revTabs button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  renderReviews();
+});
+function stars(n) {
+  const s = document.createElement("span"); s.className = "starline"; s.setAttribute("aria-label", `${n} out of 5 stars`);
+  s.innerHTML = "★".repeat(n) + `<span class="dim">${"★".repeat(5 - n)}</span>`; return s;
+}
+function renderReviews() {
+  const pending = state.reviews.filter(r => r.status === "pending").length;
+  $("revTabs").querySelector('[data-f="pending"]').textContent = pending ? `Waiting for you (${pending})` : "Waiting for you";
+  const f = state.revFilter;
+  if (f === "links") {
+    const list = [...state.invites].sort((a, b) => b.createdAt - a.createdAt);
+    if (!list.length) { $("revList").innerHTML = '<p class="muted">No unused links. Links disappear from here once someone uses them.</p>'; return; }
+    $("revList").replaceChildren(...list.map(inv => {
+      const c = document.createElement("div"); c.className = "req";
+      const t = document.createElement("strong"); t.textContent = inv.label || "Review link";
+      const m = document.createElement("span"); m.className = "muted";
+      m.textContent = `Created ${new Date(inv.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+      c.append(t, m, linkBox(inv.code));
+      const a = document.createElement("div"); a.className = "actions";
+      const del = document.createElement("button"); del.className = "btn2 small"; del.textContent = "Cancel link";
+      del.onclick = async () => { try { await api("invite-delete", { code: inv.code }); toast("Link cancelled."); loadReviews(); } catch (e) { toast(e.message); } };
+      a.append(del); c.append(a);
+      return c;
+    }));
+    return;
+  }
+  const list = state.reviews.filter(r => r.status === f).sort((a, b) => b.createdAt - a.createdAt);
+  if (!list.length) {
+    $("revList").innerHTML = `<p class="muted">${{ pending: "No new reviews. They show up here when a shopper uses a review link.", published: "No published reviews yet. Published reviews appear at the bottom of the website.", hidden: "No hidden reviews." }[f]}</p>`;
+    return;
+  }
+  $("revList").replaceChildren(...list.map(r => {
+    const c = document.createElement("div"); c.className = "req";
+    const top = document.createElement("div"); top.className = "top2";
+    const who = document.createElement("strong"); who.textContent = r.name;
+    top.append(stars(r.rating), who);
+    const t = document.createElement("p"); t.textContent = r.text;
+    const m = document.createElement("span"); m.className = "muted";
+    m.textContent = `Sent ${new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` +
+      (r.visitDate ? ` · visit on ${fmtDate(r.visitDate)}` : " · walk-in link");
+    const a = document.createElement("div"); a.className = "actions";
+    const b = (label, fn) => { const x = document.createElement("button"); x.type = "button"; x.className = "btn2 small"; x.textContent = label; x.onclick = fn; return x; };
+    const set = status => async () => { try { await api("review", { code: r.code, status }); toast(status === "published" ? "Published. It's now on the website." : status === "hidden" ? "Hidden from the website." : "Moved back to waiting."); loadReviews(); } catch (e) { toast(e.message); } };
+    if (r.status !== "published") a.append(b("Publish", set("published")));
+    if (r.status !== "hidden") a.append(b("Hide", set("hidden")));
+    const del = b("Delete", () => {
+      if (del.dataset.confirm) return api("review-delete", { code: r.code }).then(() => { toast("Review deleted."); loadReviews(); }).catch(e => toast(e.message));
+      del.dataset.confirm = "1"; del.textContent = "Tap again to delete"; del.classList.add("err");
+      setTimeout(() => { del.dataset.confirm = ""; del.textContent = "Delete"; del.classList.remove("err"); }, 4000);
+    });
+    del.style.marginLeft = "auto"; a.append(del);
+    c.append(top, t, m, a);
+    return c;
+  }));
+}
+function linkBox(code) {
+  const url = reviewUrl(code);
+  const box = document.createElement("div"); box.className = "linkbox";
+  const inp = document.createElement("input"); inp.readOnly = true; inp.value = url; inp.setAttribute("aria-label", "Review link"); inp.onclick = () => inp.select();
+  const msg = `Thanks for shopping at ${CONFIG.name}! If you have a minute, I'd love a review: ${url}`;
+  const copy = document.createElement("button"); copy.type = "button"; copy.className = "btn2 small"; copy.textContent = "Copy link";
+  copy.onclick = async () => { try { await navigator.clipboard.writeText(url); toast("Link copied."); } catch { inp.select(); toast("Selected. Press copy on your device."); } };
+  const text = document.createElement("a"); text.className = "btn2 small"; text.style.cssText = "text-decoration:none;color:inherit"; text.textContent = "Text it"; text.href = `sms:?&body=${encodeURIComponent(msg)}`;
+  const mail = document.createElement("a"); mail.className = "btn2 small"; mail.style.cssText = "text-decoration:none;color:inherit"; mail.textContent = "Email it";
+  mail.href = `mailto:?subject=${encodeURIComponent("Thanks for visiting " + CONFIG.name)}&body=${encodeURIComponent(msg)}`;
+  box.append(inp, copy, text, mail);
+  return box;
+}
+$("inviteForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    const d = await api("invite", { label: $("f-label").value.trim() });
+    $("f-label").value = "";
+    const out = $("inviteOut"); out.replaceChildren();
+    const p = document.createElement("p"); p.className = "muted"; p.style.marginTop = "12px"; p.textContent = "Here's your link. Send it to the shopper:";
+    out.append(p, linkBox(d.code));
+    loadReviews();
+  } catch (err) { toast(err.message); }
+});
